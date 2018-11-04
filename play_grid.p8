@@ -1,0 +1,189 @@
+pico-8 cartridge // http://www.pico-8.com
+version 16
+__lua__
+
+dirs={
+	{0,-1},
+	{0,1},
+	{-1,0},
+	{1,0}
+}
+
+--path={}
+act_dir = 0
+dir_num = 0
+change_c=20
+
+runs = 0
+
+grid={}
+grid_count= 0
+added_hist={}
+
+start ={x=64,y=64}
+
+function dist(x,y,x2,y2)
+	return sqrt((x-x2)^2)+sqrt((y-y2)^2)
+end
+
+function dist_m(x1,y1,x2,y2)
+ return max(abs(x1-x2),abs(y1-y2)) 
+end
+
+function grid_ini()
+	for i=1,128 do
+	 grid[i] = {}
+ 	for j=1,128 do
+ 		grid[i][j]= false		
+ 	end
+ end 
+end
+
+function _init()
+ cls()
+ 
+ grid_ini()
+ 
+ dir_num=flr(rnd(3)+1)
+ act_dir =dirs[dir_num]
+ 
+ add(added_hist,{x= 64,y=64,col=dir_num +8})
+end
+
+
+function gen_once()
+	local tmp={}
+	local old = added_hist[#added_hist]
+	
+	--check if direction should change
+	if rnd(100)<= change_c then
+		dir_num =flr(rnd(100)+1)%4+1
+		act_dir =dirs[dir_num]
+		change_c = 20
+	end
+	
+	tmp.x=old.x + act_dir[1]
+	tmp.y=old.y + act_dir[2]	
+
+	if dist_m(64,64,tmp.x,tmp.y)>63 then
+		if dir_num%2 == 1 then
+			dir_num +=1
+			act_dir = dirs[dir_num]
+		else
+			dir_num -=1
+			act_dir = dirs[dir_num]
+		end
+		change_c = 5
+	end
+	
+	tmp.x=old.x + act_dir[1]
+	tmp.y=old.y + act_dir[2]
+	tmp.col = 8+dir_num
+	
+	runs +=1
+	
+	if grid[tmp.y][tmp.x] == false then
+					grid[tmp.y][tmp.x]=true
+					grid_count+=1
+	end
+	
+	add(added_hist,tmp)
+end
+
+gen = true
+last_btn =time()
+function _update60()
+	if btn(5)== true then
+	 gen=true
+	end
+	--l,r,o,u
+	if btn(0)== true 
+	and start.x >1 
+	and grid[start.y][start.x+1]==true then
+	  start.x += 1
+	  last_btn=time()
+	elseif btn(1)==true
+	and grid[start.y][start.x-1]==true then
+	  start.x -= 1
+	  last_btn=time()
+	elseif btn(2)==true 
+	and grid[start.y+1][start.x]==true then
+			start.y +=1
+			last_btn=time()
+	elseif btn(3)==true
+	and grid[start.y-1][start.x]==true then
+			start.y -=1
+			last_btn=time()
+	end
+	   
+	
+	if gen == true then
+		grid_ini()
+		grid_count = 0
+		while grid_count < 3000 do
+			gen_once()
+		end
+		start.x = 64
+		start.y = 64
+		gen = false
+		cls()
+	end
+end
+
+function _draw()
+ --cls()
+-- rectfill(0,0,30,11,1)
+-- print(grid_count,0,0,7)
+-- print(runs,0,6,7)
+-- for k,v in pairs(added_hist) do
+--  if k == #added_hist then
+--  	pset(v.x,v.y,8)
+--  else
+--  	pset(v.x,v-.y,v.col)
+--  end
+-- end
+ --print(dir_num)
+ cls()
+-- for i=1,128 do
+-- 	for j=1,128 do
+-- 		if grid[i][j] == true then
+-- 			pset(j,i,7)
+-- 		end
+-- 	end
+-- end
+ 
+ 
+ for i=-5,5 do
+ 	for j=-5,5 do
+ 		if start.x+j>0 and start.x+j<129
+ 		and start.y+i>0 and start.y+i<129
+ 		then
+ 			if grid[start.y+i][start.x+j]== true then
+ 				spr(3,64-j*8,64-i*8)
+ 			end
+ 		end
+ 	end
+ end
+ 
+ spr(1,64,64)
+ 
+ local tmp = added_hist[#added_hist]
+ added_hist = {}
+ add(added_hist,tmp)
+ color(8)
+-- print(runs)
+end
+__gfx__
+00000000004444005555555555555555000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+0000000000aaaa006666656655555655000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00700700007070006666656655555555000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+0007700000aaaa006666656656555555000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+0007700008aa0a805555555555555555000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00700700084114806656666655555655000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+000000000e1111e06656666655555555000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000001001006656666655555555000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+__map__
+0000020202020200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+0000020303030200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+0000020303030200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+0000020202020200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
